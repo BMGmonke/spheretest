@@ -17,7 +17,7 @@ android {
 		versionCode 15
 		versionName "${System.env.VERSION_STR}.${versionCode}"
 		minSdkVersion 21
-		targetSdkVersion 9
+		targetSdkVersion 24
 		applicationId "net.minetest.minetest"
 		manifestPlaceholders = [ package: "net.minetest.minetest", project: project.name ]
 	}
