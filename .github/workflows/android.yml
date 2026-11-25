@@ -31,7 +31,6 @@ jobs:
           sudo apt-get install -y build-essential cmake automake autoconf libtool pkg-config \
             wget curl unzip zip subversion git bzip2 lib32stdc++6
 
-      # Current Android command-line tools require JDK 17.
       - name: Install Java 17 for Android SDK tools
         uses: actions/setup-java@v4
         with:
@@ -41,7 +40,6 @@ jobs:
       - name: Install Android SDK
         uses: android-actions/setup-android@v3
         with:
-          # The action defaults to the removed SDK package named 'tools'.
           packages: 'platform-tools'
 
       - name: Install Android SDK 23 and legacy NDK r11c
@@ -50,20 +48,16 @@ jobs:
           yes | sdkmanager --licenses >/dev/null || true
           sdkmanager "platform-tools" "platforms;android-23" "build-tools;23.0.3"
           mkdir -p "$ANDROID_HOME/ndk"
-          curl -fL --retry 3 \
+          curl -fL --retry 3 --retry-all-errors --connect-timeout 30 \
             https://dl.google.com/android/repository/android-ndk-r11c-linux-x86_64.zip \
             -o /tmp/android-ndk-r11c.zip
           unzip -q /tmp/android-ndk-r11c.zip -d "$ANDROID_HOME/ndk"
           LEGACY_NDK="$ANDROID_HOME/ndk/android-ndk-r11c"
           test -x "$LEGACY_NDK/ndk-build"
-          # setup-android exports ANDROID_NDK_ROOT for its modern NDK. This
-          # legacy project invokes ndk-build via ANDROID_NDK but libiconv's
-          # configure script reads ANDROID_NDK_ROOT, so point both at r11c.
           echo "ANDROID_NDK=$LEGACY_NDK" >> "$GITHUB_ENV"
           echo "ANDROID_NDK_ROOT=$LEGACY_NDK" >> "$GITHUB_ENV"
           echo "ANDROID_NDK_HOME=$LEGACY_NDK" >> "$GITHUB_ENV"
 
-      # This project's Gradle 2.10 / Android Gradle Plugin 1.5.0 need Java 8.
       - name: Switch to Java 8 for legacy Gradle
         uses: actions/setup-java@v4
         with:
@@ -71,8 +65,11 @@ jobs:
           java-version: '8'
 
       - name: Install Gradle 2.10
+        shell: bash
         run: |
-          curl -fL --retry 3 https://services.gradle.org/distributions/gradle-2.10-bin.zip -o /tmp/gradle.zip
+          curl -fL --retry 3 --retry-all-errors --connect-timeout 30 \
+            https://services.gradle.org/distributions/gradle-2.10-bin.zip \
+            -o /tmp/gradle.zip
           unzip -q /tmp/gradle.zip -d "$RUNNER_TEMP/gradle"
           echo "$RUNNER_TEMP/gradle/gradle-2.10/bin" >> "$GITHUB_PATH"
 
@@ -87,13 +84,32 @@ jobs:
         env:
           VERSION_STR: 0.4.14
         run: |
+          set -euo pipefail
           make release
+
+      - name: Verify and stage APK
+        shell: bash
+        run: |
+          set -euo pipefail
+          echo "Searching the Android project for the generated APK..."
+          find build/android -type f -name '*.apk' -print
+          APK="$(find build/android -type f -path '*/outputs/apk/*' -name '*.apk' -print -quit)"
+          if [ -z "$APK" ]; then
+            echo "::error::Gradle reported success, but no APK exists under build/android/**/outputs/apk/."
+            exit 1
+          fi
+          mkdir -p artifacts
+          cp "$APK" artifacts/SphereTest-Android-ARMv7.apk
+          test -s artifacts/SphereTest-Android-ARMv7.apk
+          unzip -t artifacts/SphereTest-Android-ARMv7.apk
+          echo "Verified APK:"
+          ls -lh artifacts/SphereTest-Android-ARMv7.apk
 
       - name: Upload APK
         if: success()
         uses: actions/upload-artifact@v4
         with:
           name: spheretest-android-armv7
-          path: build/android/build/outputs/apk/Minetest-release.apk
+          path: artifacts/SphereTest-Android-ARMv7.apk
           if-no-files-found: error
           retention-days: 14
