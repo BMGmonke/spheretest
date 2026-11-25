@@ -16,7 +16,6 @@ import android.content.res.AssetFileDescriptor;
 
 import android.os.AsyncTask;
 import android.os.Bundle;
-import android.os.Environment;
 import android.util.Log;
 import android.view.Display;
 import android.widget.ProgressBar;
@@ -95,9 +94,8 @@ public class MinetestAssetCopy extends Activity
 			m_filenames    = new Vector<String>();
 			m_tocopy       = new Vector<String>();
 			m_asset_size_unknown = new Vector<String>();
-			String baseDir = 
-					Environment.getExternalStorageDirectory().getAbsolutePath()
-					+ "/";
+			// App-private storage is writable without legacy storage permissions.
+			String baseDir = getFilesDir().getAbsolutePath() + "/";
 			
 			
 			// prepare temp folder
@@ -270,8 +268,7 @@ public class MinetestAssetCopy extends Activity
 		 */
 		protected void ProcessFileList()
 		{
-			String FlashBaseDir = 
-					Environment.getExternalStorageDirectory().getAbsolutePath();
+			String FlashBaseDir = getFilesDir().getAbsolutePath();
 			
 			Iterator itr = m_filenames.iterator();
 			
