@@ -6,7 +6,7 @@ OS := $(shell uname)
 # GPROF = 1
 
 # build for build platform
-APP_PLATFORM = android-9
+APP_PLATFORM = android-21
 
 ANDR_ROOT = $(shell pwd)
 PROJ_ROOT = $(shell realpath $(ANDR_ROOT)/../..)
@@ -26,14 +26,14 @@ VERSION_PATCH := $(shell cat $(PROJ_ROOT)/CMakeLists.txt | \
 ################################################################################
 # toolchain config for arm new processors
 ################################################################################
-TARGET_HOST = arm-linux
-TARGET_ABI = armeabi-v7a
-TARGET_LIBDIR = armeabi-v7a
-TARGET_TOOLCHAIN = arm-linux-androideabi-
-TARGET_CFLAGS_ADDON = -mfloat-abi=softfp -mfpu=vfpv3 -O3
+TARGET_HOST = aarch64-linux
+TARGET_ABI = arm64-v8a
+TARGET_LIBDIR = arm64-v8a
+TARGET_TOOLCHAIN = aarch64-linux-android-
+TARGET_CFLAGS_ADDON = -O3
 TARGET_CXXFLAGS_ADDON = $(TARGET_CFLAGS_ADDON)
-TARGET_ARCH = armv7
-CROSS_PREFIX = arm-linux-androideabi-
+TARGET_ARCH = aarch64
+CROSS_PREFIX = aarch64-linux-android-
 COMPILER_VERSION = 4.9
 HAVE_LEVELDB = 1
 
@@ -315,7 +315,7 @@ $(OPENSSL_LIB): $(OPENSSL_TIMESTAMP) $(GMP_LIB)
 		--toolchain=${TARGET_TOOLCHAIN}${COMPILER_VERSION}                     \
 		--install-dir=$${TOOLCHAIN};                                           \
 	export PATH="$${TOOLCHAIN}/bin:$${PATH}";                                  \
-	CC=${CROSS_PREFIX}gcc ./Configure enable-gmp -DL_ENDIAN -I${GMP_DIR} -L${GMP_DIR}/usr/lib android-${TARGET_ARCH};\
+	CC=${CROSS_PREFIX}gcc ./Configure enable-gmp -DL_ENDIAN -I${GMP_DIR} -L${GMP_DIR}/usr/lib android64-aarch64;\
 	CC=${CROSS_PREFIX}gcc ANDROID_DEV=/tmp/ndk-${TARGET_HOST} make depend;     \
 	CC=${CROSS_PREFIX}gcc ANDROID_DEV=/tmp/ndk-${TARGET_HOST} make build_libs; \
 	touch ${OPENSSL_TIMESTAMP};                                                \
