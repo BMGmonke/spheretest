@@ -40,6 +40,9 @@ jobs:
 
       - name: Install Android SDK
         uses: android-actions/setup-android@v3
+        with:
+          # The action defaults to the removed SDK package named 'tools'.
+          packages: 'platform-tools'
 
       - name: Install Android SDK 23 and legacy NDK r11c
         shell: bash
