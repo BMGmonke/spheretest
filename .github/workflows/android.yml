@@ -29,7 +29,7 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install -y build-essential cmake automake autoconf libtool pkg-config \
-            wget curl unzip zip subversion git bzip2 lib32stdc++6
+            wget curl unzip zip subversion git bzip2 lib32stdc++6 autotools-dev
 
       - name: Install Java 17 for Android SDK tools
         uses: actions/setup-java@v4
@@ -101,7 +101,7 @@ jobs:
           mkdir -p artifacts
           cp "$APK" artifacts/SphereTest-Android-ARM64.apk
           test -s artifacts/SphereTest-Android-ARM64.apk
-          unzip -t artifacts/SphereTest-Android-ARMv7.apk
+          unzip -t artifacts/SphereTest-Android-ARM64.apk
           echo "Verified APK:"
           ls -lh artifacts/SphereTest-Android-ARMv7.apk
 
