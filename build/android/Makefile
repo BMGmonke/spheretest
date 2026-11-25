@@ -298,7 +298,8 @@ openssl_download :
 openssl : $(OPENSSL_LIB)
 
 $(OPENSSL_LIB): $(OPENSSL_TIMESTAMP) $(GMP_LIB)
-	@REFRESH=0;                                                                \
+	@set -e;                                                                  \
+REFRESH=0;                                                                \
 	if [ ! -e ${OPENSSL_TIMESTAMP_INT} ] ; then                                \
 		echo "${OPENSSL_TIMESTAMP_INT} doesn't exist";                         \
 		REFRESH=1;                                                             \
@@ -349,7 +350,8 @@ leveldb_download :
 leveldb : $(LEVELDB_LIB)
 
 $(LEVELDB_LIB): $(LEVELDB_TIMESTAMP)
-	@REFRESH=0;                                                                \
+	@set -e;                                                                  \
+REFRESH=0;                                                                \
 	if [ ! -e ${LEVELDB_TIMESTAMP_INT} ] ; then                                \
 		REFRESH=1;                                                             \
 	fi;                                                                        \
@@ -444,7 +446,7 @@ iconv_download :
 		rm libiconv-${ICONV_VERSION}.tar.gz;                               \
 		ln -s libiconv-${ICONV_VERSION} libiconv;                          \
 		cd ${ICONV_DIR};                                                   \
-		patch -p1 < ${ANDR_ROOT}/patches/libiconv_android.patch;           \
+		patch -p1 < ${ANDR_ROOT}/patches/libiconv_android.patch || exit 1;   \
 		patch -p1 < ${ANDR_ROOT}/patches/libiconv_stdio.patch || exit 1;   \
 		test -s /usr/share/misc/config.sub || { echo "autotools-dev config.sub is missing"; exit 1; }; \
 		cp /usr/share/misc/config.sub build-aux/config.sub || exit 1;       \
@@ -454,7 +456,8 @@ iconv_download :
 iconv : $(ICONV_LIB)
 
 $(ICONV_LIB) : $(ICONV_TIMESTAMP)
-	@REFRESH=0;                                                                \
+	@set -e;                                                                  \
+REFRESH=0;                                                                \
 	if [ ! -e ${ICONV_TIMESTAMP_INT} ] ; then                                  \
 		REFRESH=1;                                                         \
 	fi;                                                                        \
@@ -566,7 +569,8 @@ curl_download :
 curl : $(CURL_LIB)
 
 $(CURL_LIB): $(CURL_TIMESTAMP) $(OPENSSL_LIB)
-	@REFRESH=0;                                                                \
+	@set -e;                                                                  \
+REFRESH=0;                                                                \
 	if [ ! -e ${CURL_TIMESTAMP_INT} ] ; then                                   \
 		REFRESH=1;                                                             \
 	fi;                                                                        \
@@ -625,7 +629,8 @@ gmp_download :
 gmp : $(GMP_LIB)
 
 $(GMP_LIB): $(GMP_TIMESTAMP)
-	@REFRESH=0;                                                                \
+	@set -e;                                                                  \
+REFRESH=0;                                                                \
 	if [ ! -e ${GMP_TIMESTAMP_INT} ] ; then                                    \
 		REFRESH=1;                                                         \
 	fi;                                                                        \
