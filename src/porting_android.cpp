@@ -69,10 +69,10 @@ void android_main(android_app *app)
 /* TODO this doesn't work as expected, no idea why but there's a workaround   */
 /* for it right now */
 extern "C" {
-	JNIEXPORT void JNICALL Java_net_minetest_MtNativeActivity_putMessageBoxResult(
+	JNIEXPORT void JNICALL Java_net_minetest_minetest_MtNativeActivity_putMessageBoxResult(
 			JNIEnv * env, jclass thiz, jstring text)
 	{
-		errorstream << "Java_net_minetest_MtNativeActivity_putMessageBoxResult got: "
+		errorstream << "Java_net_minetest_minetest_MtNativeActivity_putMessageBoxResult got: "
 				<< std::string((const char*)env->GetStringChars(text,0))
 				<< std::endl;
 	}
@@ -205,8 +205,6 @@ static std::string getAndroidPath(jclass cls, jobject obj, jclass cls_File,
 
 void initializePathsAndroid()
 {
-	// Get Environment class
-	jclass cls_Env = jnienv->FindClass("android/os/Environment");
 	// Get File class
 	jclass cls_File = jnienv->FindClass("java/io/File");
 	// Get getAbsolutePath method
@@ -215,8 +213,10 @@ void initializePathsAndroid()
 
 	path_cache   = getAndroidPath(nativeActivity, app_global->activity->clazz,
 			cls_File, mt_getAbsPath, "getCacheDir");
-	path_storage = getAndroidPath(cls_Env, NULL, cls_File, mt_getAbsPath,
-			"getExternalStorageDirectory");
+	// Keep writable game data inside the app sandbox. Shared external
+	// storage requires runtime permissions and is restricted on modern Android.
+	path_storage = getAndroidPath(nativeActivity, app_global->activity->clazz,
+			cls_File, mt_getAbsPath, "getFilesDir");
 	path_user    = path_storage + DIR_DELIM + PROJECT_NAME_C;
 	path_share   = path_storage + DIR_DELIM + PROJECT_NAME_C;
 
