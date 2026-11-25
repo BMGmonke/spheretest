@@ -46,7 +46,7 @@ jobs:
         shell: bash
         run: |
           yes | sdkmanager --licenses >/dev/null || true
-          sdkmanager "platform-tools" "platforms;android-23" "build-tools;23.0.3"
+          sdkmanager "platform-tools" "platforms;android-23" "build-tools;23.0.3" "build-tools;35.0.0"
           mkdir -p "$ANDROID_HOME/ndk"
           curl -fL --retry 3 --retry-all-errors --connect-timeout 30 \
             https://dl.google.com/android/repository/android-ndk-r11c-linux-x86_64.zip \
@@ -87,22 +87,49 @@ jobs:
           set -euo pipefail
           make release
 
-      - name: Verify and stage APK
+      - name: Align, sign, and verify ARM64 APK
         shell: bash
         run: |
           set -euo pipefail
           echo "Searching the Android project for the generated APK..."
-          find build/android -type f -name '*.apk' -print
+          find build/android -type f -path '*/outputs/apk/*' -name '*.apk' -print
           APK="$(find build/android -type f -path '*/outputs/apk/*' -name '*.apk' -print -quit)"
           if [ -z "$APK" ]; then
             echo "::error::Gradle reported success, but no APK exists under build/android/**/outputs/apk/."
             exit 1
           fi
+
+          BUILD_TOOLS="$ANDROID_HOME/build-tools/35.0.0"
+          test -x "$BUILD_TOOLS/zipalign"
+          test -x "$BUILD_TOOLS/apksigner"
+
+          # Refuse to publish an APK that is not actually 64-bit ARM.
+          if ! unzip -Z1 "$APK" | grep -q '^lib/arm64-v8a/'; then
+            echo "::error::APK does not contain arm64-v8a native libraries."
+            exit 1
+          fi
+
           mkdir -p artifacts
-          cp "$APK" artifacts/SphereTest-Android-ARM64.apk
-          test -s artifacts/SphereTest-Android-ARM64.apk
+          "$BUILD_TOOLS/zipalign" -f -p 4 "$APK" "$RUNNER_TEMP/SphereTest-aligned.apk"
+
+          # A temporary CI key signs this sideload build. A persistent key can
+          # be supplied later through GitHub Actions secrets for seamless updates.
+          keytool -genkeypair -noprompt -keystore "$RUNNER_TEMP/spheretest-ci.jks" \
+            -storepass "spheretest-ci-store" -keypass "spheretest-ci-key" \
+            -alias spheretest -keyalg RSA -keysize 2048 -validity 10000 \
+            -dname "CN=SphereTest CI, OU=Android, O=BMGmonke, C=US"
+
+          "$BUILD_TOOLS/apksigner" sign \
+            --ks "$RUNNER_TEMP/spheretest-ci.jks" \
+            --ks-key-alias spheretest \
+            --ks-pass pass:spheretest-ci-store \
+            --key-pass pass:spheretest-ci-key \
+            --out artifacts/SphereTest-Android-ARM64.apk \
+            "$RUNNER_TEMP/SphereTest-aligned.apk"
+
+          "$BUILD_TOOLS/apksigner" verify --verbose --print-certs artifacts/SphereTest-Android-ARM64.apk
           unzip -t artifacts/SphereTest-Android-ARM64.apk
-          echo "Verified APK:"
+          echo "Signed ARM64 APK:"
           ls -lh artifacts/SphereTest-Android-ARM64.apk
 
       - name: Upload APK
