@@ -31,11 +31,12 @@ jobs:
           sudo apt-get install -y build-essential cmake automake autoconf libtool pkg-config \
             wget curl unzip zip subversion git bzip2 lib32stdc++6
 
-      - name: Install Java 8
+      # Current Android command-line tools require JDK 17.
+      - name: Install Java 17 for Android SDK tools
         uses: actions/setup-java@v4
         with:
           distribution: temurin
-          java-version: '8'
+          java-version: '17'
 
       - name: Install Android SDK
         uses: android-actions/setup-android@v3
@@ -51,6 +52,13 @@ jobs:
             -o /tmp/android-ndk-r11c.zip
           unzip -q /tmp/android-ndk-r11c.zip -d "$ANDROID_HOME/ndk"
           echo "ANDROID_NDK=$ANDROID_HOME/ndk/android-ndk-r11c" >> "$GITHUB_ENV"
+
+      # This project's Gradle 2.10 / Android Gradle Plugin 1.5.0 need Java 8.
+      - name: Switch to Java 8 for legacy Gradle
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '8'
 
       - name: Install Gradle 2.10
         run: |
