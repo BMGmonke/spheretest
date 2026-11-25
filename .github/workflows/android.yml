@@ -29,7 +29,7 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install -y build-essential cmake automake autoconf libtool pkg-config \
-            wget curl unzip zip subversion git bzip2 lib32stdc++6 autotools-dev
+            wget curl unzip zip subversion git bzip2 lib32stdc++6 autotools-dev xutils-dev
 
       - name: Install Java 17 for Android SDK tools
         uses: actions/setup-java@v4
@@ -103,13 +103,13 @@ jobs:
           test -s artifacts/SphereTest-Android-ARM64.apk
           unzip -t artifacts/SphereTest-Android-ARM64.apk
           echo "Verified APK:"
-          ls -lh artifacts/SphereTest-Android-ARMv7.apk
+          ls -lh artifacts/SphereTest-Android-ARM64.apk
 
       - name: Upload APK
         if: success()
         uses: actions/upload-artifact@v4
         with:
           name: spheretest-android-arm64
-          path: artifacts/SphereTest-Android-ARMv7.apk
+          path: artifacts/SphereTest-Android-ARM64.apk
           if-no-files-found: error
           retention-days: 14
