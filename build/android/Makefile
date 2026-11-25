@@ -452,8 +452,8 @@ iconv_download :
 		patch -p1 < ${ANDR_ROOT}/patches/libiconv_android.patch || exit 1;   \
 		patch -p1 < ${ANDR_ROOT}/patches/libiconv_stdio.patch || exit 1;   \
 		test -s /usr/share/misc/config.sub || { echo "autotools-dev config.sub is missing"; exit 1; }; \
-		cp /usr/share/misc/config.sub build-aux/config.sub || exit 1;       \
-		chmod +x build-aux/config.sub || exit 1;                            \
+		find . -type f -name config.sub -exec cp /usr/share/misc/config.sub {} \; || exit 1; \
+		find . -type f -name config.sub -exec chmod +x {} \; || exit 1;     \
 	fi
 
 iconv : $(ICONV_LIB)
