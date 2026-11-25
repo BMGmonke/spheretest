@@ -633,7 +633,7 @@ ShaderInfo generate_shader(std::string name, u8 material_type, u8 drawtype,
 
 	// Create shaders header
 	bool is_ogles2 = driver->getDriverType() == video::EDT_OGLES2;
-	std::string shaders_header = is_ogles2 ? "#version 100\nprecision mediump float;\n" : "#version 120\n";
+	std::string shaders_header = is_ogles2 ? "#version 100\n" : "#version 120\n";
 
 	static const char* drawTypes[] = {
 		"NDT_NORMAL",
@@ -786,6 +786,12 @@ ShaderInfo generate_shader(std::string name, u8 material_type, u8 drawtype,
 	// vertex attributes and the legacy shader names used by SphereTest.
 	std::string vertex_header = shaders_header;
 	std::string pixel_header = shaders_header;
+	if (is_ogles2) {
+		// Planet deformation operates on large world coordinates. Keep vertex
+		// arithmetic at high precision; fragment shaders can use mediump.
+		vertex_header += "precision highp float;\n";
+		pixel_header += "precision mediump float;\n";
+	}
 	if (is_ogles2) {
 		vertex_header +=
 			"attribute vec3 inVertexPosition;\n"
