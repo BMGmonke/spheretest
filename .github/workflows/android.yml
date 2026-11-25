@@ -54,7 +54,14 @@ jobs:
             https://dl.google.com/android/repository/android-ndk-r11c-linux-x86_64.zip \
             -o /tmp/android-ndk-r11c.zip
           unzip -q /tmp/android-ndk-r11c.zip -d "$ANDROID_HOME/ndk"
-          echo "ANDROID_NDK=$ANDROID_HOME/ndk/android-ndk-r11c" >> "$GITHUB_ENV"
+          LEGACY_NDK="$ANDROID_HOME/ndk/android-ndk-r11c"
+          test -x "$LEGACY_NDK/ndk-build"
+          # setup-android exports ANDROID_NDK_ROOT for its modern NDK. This
+          # legacy project invokes ndk-build via ANDROID_NDK but libiconv's
+          # configure script reads ANDROID_NDK_ROOT, so point both at r11c.
+          echo "ANDROID_NDK=$LEGACY_NDK" >> "$GITHUB_ENV"
+          echo "ANDROID_NDK_ROOT=$LEGACY_NDK" >> "$GITHUB_ENV"
+          echo "ANDROID_NDK_HOME=$LEGACY_NDK" >> "$GITHUB_ENV"
 
       # This project's Gradle 2.10 / Android Gradle Plugin 1.5.0 need Java 8.
       - name: Switch to Java 8 for legacy Gradle
