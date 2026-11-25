@@ -325,17 +325,17 @@ void set_default_settings(Settings *settings)
 	settings->setDefault("liquid_update", "1.0");
 
 	//mapgen stuff
-	settings->setDefault("mg_name", "v6");
+	settings->setDefault("mg_name", "flat");
 	settings->setDefault("water_level", "1");
 	settings->setDefault("chunksize", "5");
 	settings->setDefault("mg_flags", "dungeons");
 
 	// Planet
-	settings->setDefault("planet_enable", "false");
-	settings->setDefault("planet_radius", "30");
+	settings->setDefault("planet_enable", "true");
+	settings->setDefault("planet_radius", "2");
 	settings->setDefault("planet_keep_scale", "true");
 	settings->setDefault("planet_centrifugal_enable", "true");
-	settings->setDefault("planet_realistic_gravity", "false");
+	settings->setDefault("planet_realistic_gravity", "true");
 	settings->setDefault("planet_fallthrough_enable", "true");
 
 	// IPv6
@@ -356,9 +356,9 @@ void set_default_settings(Settings *settings)
 #ifdef __ANDROID__
 	settings->setDefault("screenW", "0");
 	settings->setDefault("screenH", "0");
-	settings->setDefault("enable_shaders", "false");
+	settings->setDefault("enable_shaders", "true");
 	settings->setDefault("fullscreen", "true");
-	settings->setDefault("video_driver", "ogles1");
+	settings->setDefault("video_driver", "ogles2");
 	settings->setDefault("touchtarget", "true");
 	settings->setDefault("TMPFolder","/sdcard/" PROJECT_NAME_C "/tmp/");
 	settings->setDefault("touchscreen_threshold","20");
