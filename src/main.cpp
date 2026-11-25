@@ -706,7 +706,7 @@ static std::string get_clean_world_path(const std::string &path)
 	} else {
 		clean_path = path;
 	}
-	return path;
+	return clean_path;
 }
 
 
