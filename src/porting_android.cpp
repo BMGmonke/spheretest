@@ -213,12 +213,28 @@ void initializePathsAndroid()
 
 	path_cache   = getAndroidPath(nativeActivity, app_global->activity->clazz,
 			cls_File, mt_getAbsPath, "getCacheDir");
-	// Keep writable game data inside the app sandbox. Shared external
-	// storage requires runtime permissions and is restricted on modern Android.
-	path_storage = getAndroidPath(nativeActivity, app_global->activity->clazz,
-			cls_File, mt_getAbsPath, "getFilesDir");
+	// Store worlds and writable game data in this app's external-files
+	// directory (Android/data/<package>/files). This is app-specific storage,
+	// so Android does not require broad storage permission for it.
+	jmethodID mt_getExternalFilesDir = jnienv->GetMethodID(nativeActivity,
+			"getExternalFilesDir", "(Ljava/lang/String;)Ljava/io/File;");
+	jobject external_files = jnienv->CallObjectMethod(
+			app_global->activity->clazz, mt_getExternalFilesDir, NULL);
+	if (external_files && !jnienv->ExceptionCheck()) {
+		jstring js_path = (jstring) jnienv->CallObjectMethod(
+				external_files, mt_getAbsPath);
+		path_storage = javaStringToUTF8(js_path);
+	} else {
+		// Fall back to internal app files if external app-specific storage
+		// is unavailable on the device.
+		if (jnienv->ExceptionCheck())
+			jnienv->ExceptionClear();
+		path_storage = getAndroidPath(nativeActivity,
+				app_global->activity->clazz, cls_File, mt_getAbsPath,
+				"getFilesDir");
+	}
 	path_user    = path_storage + DIR_DELIM + PROJECT_NAME_C;
-	path_share   = path_storage + DIR_DELIM + PROJECT_NAME_C;
+	path_share   = path_user;
 
 	migrateCachePath();
 }
