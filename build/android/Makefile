@@ -111,7 +111,7 @@ GMP_DIR = $(ANDR_ROOT)/deps/gmp-$(GMP_VERSION)
 GMP_LIB = $(GMP_DIR)/usr/lib/libgmp.so
 GMP_TIMESTAMP = $(GMP_DIR)/timestamp
 GMP_TIMESTAMP_INT = $(ANDR_ROOT)/deps/gmp_timestamp
-GMP_URL_HTTP = https://gmplib.org/download/gmp/gmp-$(GMP_VERSION).tar.bz2
+GMP_URL_HTTP = https://ftp.gnu.org/gnu/gmp/gmp-$(GMP_VERSION).tar.bz2
 
 FREETYPE_DIR = $(ANDR_ROOT)/deps/freetype2-android/
 FREETYPE_LIB = $(FREETYPE_DIR)/Android/obj/local/$(TARGET_ABI)/libfreetype2-static.a
@@ -613,7 +613,7 @@ gmp_download :
 		echo "gmp sources missing, downloading...";                        \
 		mkdir -p ${ANDR_ROOT}/deps;                                        \
 		cd deps;                                                           \
-		wget ${GMP_URL_HTTP} || exit 1;                                    \
+		wget --tries=3 --timeout=30 ${GMP_URL_HTTP} || exit 1;                                    \
 		tar -xjf gmp-${GMP_VERSION}.tar.bz2 || exit 1;                     \
 		rm gmp-${GMP_VERSION}.tar.bz2;                                     \
 		ln -s gmp-${GMP_VERSION} gmp;                                      \
