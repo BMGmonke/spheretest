@@ -94,8 +94,11 @@ public class MinetestAssetCopy extends Activity
 			m_filenames    = new Vector<String>();
 			m_tocopy       = new Vector<String>();
 			m_asset_size_unknown = new Vector<String>();
-			// App-private storage is writable without legacy storage permissions.
-			String baseDir = getFilesDir().getAbsolutePath() + "/";
+			// Keep copied assets beside the native engine data directory.
+			// getExternalFilesDir is app-scoped and needs no broad storage permission.
+			File externalDir = getExternalFilesDir(null);
+			String baseDir = (externalDir != null ? externalDir : getFilesDir())
+					.getAbsolutePath() + "/";
 			
 			
 			// prepare temp folder
@@ -103,12 +106,12 @@ public class MinetestAssetCopy extends Activity
 			
 			if (!TempFolder.exists())
 			{
-				TempFolder.mkdir();
+				TempFolder.mkdirs();
 			}
 			else {
 				File[] todel = TempFolder.listFiles();
 				
-				for(int i=0; i < todel.length; i++)
+				for(int i=0; todel != null && i < todel.length; i++)
 				{
 					Log.v("MinetestAssetCopy","deleting: " + todel[i].getAbsolutePath());
 					todel[i].delete();
@@ -117,6 +120,7 @@ public class MinetestAssetCopy extends Activity
 			
 			// add a .nomedia file
 			try {
+				new File(baseDir + "Minetest/").mkdirs();
 				OutputStream dst = new FileOutputStream(baseDir + "Minetest/.nomedia");
 				dst.close();
 			} catch (IOException e) {
@@ -134,7 +138,13 @@ public class MinetestAssetCopy extends Activity
 			
 			// doing work
 			m_copy_started = true;
-			m_ProgressBar.setMax(m_tocopy.size());
+			final int copyCount = m_tocopy.size();
+			runOnUiThread(new Runnable() {
+				@Override
+				public void run() {
+					m_ProgressBar.setMax(copyCount);
+				}
+			});
 			
 			for (int i = 0; i < m_tocopy.size(); i++)
 			{
@@ -268,7 +278,9 @@ public class MinetestAssetCopy extends Activity
 		 */
 		protected void ProcessFileList()
 		{
-			String FlashBaseDir = getFilesDir().getAbsolutePath();
+			File externalDir = getExternalFilesDir(null);
+			String FlashBaseDir = (externalDir != null ? externalDir : getFilesDir())
+					.getAbsolutePath();
 			
 			Iterator itr = m_filenames.iterator();
 			
