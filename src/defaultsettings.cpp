@@ -244,7 +244,7 @@ void set_default_settings(Settings *settings)
 	settings->setDefault("max_packets_per_iteration","1024");
 	settings->setDefault("port", "30000");
 	settings->setDefault("bind_address", "");
-	settings->setDefault("default_game", "minimal");
+	settings->setDefault("default_game", "minetest");
 	settings->setDefault("motd", "");
 	settings->setDefault("max_users", "15");
 	settings->setDefault("strict_protocol_version_checking", "false");
@@ -366,7 +366,7 @@ void set_default_settings(Settings *settings)
 	settings->setDefault("max_simultaneous_block_sends_per_client", "3");
 	settings->setDefault("emergequeue_limit_diskonly", "8");
 	settings->setDefault("emergequeue_limit_generate", "8");
-	settings->setDefault("max_block_generate_distance", "3");
+	settings->setDefault("max_block_generate_distance", "2");
 	settings->setDefault("enable_3d_clouds", "false");
 	settings->setDefault("fps_max", "30");
 	settings->setDefault("pause_fps_max", "10");
@@ -374,11 +374,11 @@ void set_default_settings(Settings *settings)
 	settings->setDefault("sqlite_synchronous", "1");
 	settings->setDefault("gui_scaling", "1.1");
 	settings->setDefault("server_map_save_interval", "15");
-	settings->setDefault("client_mapblock_limit", "500");
+	settings->setDefault("client_mapblock_limit", "200");
 	settings->setDefault("active_block_range", "1");
-	settings->setDefault("chunksize", "3");
+	settings->setDefault("chunksize", "2");
 
-	settings->setDefault("viewing_range", "25");
+	settings->setDefault("viewing_range", "15");
 	settings->setDefault("inventory_image_hack", "false");
 
 	//check for device with small screen

@@ -74,10 +74,10 @@ SubgameSpec findSubgame(const std::string &requested_id)
 	if(requested_id == "")
 		return SubgameSpec();
 
-	// This fork ships the "minimal" game, not the removed legacy
-	// "minetest" game. Old worlds and the historic default_game setting
-	// still refer to "minetest", so resolve that ID to the bundled game.
-	const std::string id = requested_id == "minetest" ? "minimal" : requested_id;
+	// The bundled game is installed under the canonical "minetest" ID.
+	// Keep worlds created by earlier SphereTest builds using "minimal"
+	// working by resolving that old ID to the new game directory.
+	const std::string id = requested_id == "minimal" ? "minetest" : requested_id;
 	std::string share = porting::path_share;
 	std::string user = porting::path_user;
 	std::vector<GameFindPath> find_paths;
