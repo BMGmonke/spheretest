@@ -69,10 +69,15 @@ std::string getSubgamePathEnv()
 	return subgame_path ? std::string(subgame_path) : "";
 }
 
-SubgameSpec findSubgame(const std::string &id)
+SubgameSpec findSubgame(const std::string &requested_id)
 {
-	if(id == "")
+	if(requested_id == "")
 		return SubgameSpec();
+
+	// This fork ships the "minimal" game, not the removed legacy
+	// "minetest" game. Old worlds and the historic default_game setting
+	// still refer to "minetest", so resolve that ID to the bundled game.
+	const std::string id = requested_id == "minetest" ? "minimal" : requested_id;
 	std::string share = porting::path_share;
 	std::string user = porting::path_user;
 	std::vector<GameFindPath> find_paths;
