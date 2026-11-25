@@ -121,8 +121,14 @@ SoundBuffer *load_opened_ogg_file(OggVorbis_File *oggFile,
 
 	SoundBuffer *snd = new SoundBuffer;
 
-	// Get some information about the OGG file
+	// Get some information about the OGG file. A malformed or empty
+	// stream can make ov_info() return NULL; do not dereference it.
 	pInfo = ov_info(oggFile, -1);
+	if (!pInfo || pInfo->channels < 1 || pInfo->rate <= 0) {
+		ov_clear(oggFile);
+		delete snd;
+		return NULL;
+	}
 
 	// Check the number of channels... always use 16-bit samples
 	if(pInfo->channels == 1)
@@ -152,9 +158,17 @@ SoundBuffer *load_opened_ogg_file(OggVorbis_File *oggFile,
 		snd->buffer.insert(snd->buffer.end(), array, array + bytes);
 	} while (bytes > 0);
 
+	// Do not index an empty vector: malformed/empty OGG files are
+	// possible in old game asset packs and operator[] would be undefined.
+	if (snd->buffer.empty()) {
+		ov_clear(oggFile);
+		delete snd;
+		return NULL;
+	}
+
 	alGenBuffers(1, &snd->buffer_id);
 	alBufferData(snd->buffer_id, snd->format,
-			&(snd->buffer[0]), snd->buffer.size(),
+			&snd->buffer[0], (ALsizei)snd->buffer.size(),
 			snd->freq);
 
 	ALenum error = alGetError();
@@ -198,10 +212,21 @@ struct BufferSource {
 size_t buffer_sound_read_func(void *ptr, size_t size, size_t nmemb, void *datasource)
 {
 	BufferSource *s = (BufferSource *)datasource;
-	size_t copied_size = MYMIN(s->len - s->cur_offset, size);
+	if (!s || !ptr || !s->buf || size == 0 || nmemb == 0 ||
+			s->cur_offset >= s->len || nmemb > SIZE_MAX / size)
+		return 0;
+
+	// Match fread(): the callback returns complete elements, and must not
+	// read beyond the remaining source buffer.
+	size_t requested = size * nmemb;
+	size_t copied_size = MYMIN(s->len - s->cur_offset, requested);
+	copied_size -= copied_size % size;
+	if (copied_size == 0)
+		return 0;
+
 	memcpy(ptr, s->buf + s->cur_offset, copied_size);
 	s->cur_offset += copied_size;
-	return copied_size;
+	return copied_size / size;
 }
 
 int buffer_sound_seek_func(void *datasource, ogg_int64_t offset, int whence)
