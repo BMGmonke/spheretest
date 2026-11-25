@@ -445,7 +445,11 @@ iconv_download :
 		ln -s libiconv-${ICONV_VERSION} libiconv;                          \
 		cd ${ICONV_DIR};                                                   \
 		patch -p1 < ${ANDR_ROOT}/patches/libiconv_android.patch;           \
-		patch -p1 < ${ANDR_ROOT}/patches/libiconv_stdio.patch;             \
+		patch -p1 < ${ANDR_ROOT}/patches/libiconv_stdio.patch;           \
+		curl -fL --retry 3 --retry-all-errors --connect-timeout 30 \
+			https://git.savannah.gnu.org/cgit/config.git/plain/config.sub \
+			-o build-aux/config.sub || exit 1;                                  \
+		chmod +x build-aux/config.sub;                                         \
 	fi
 
 iconv : $(ICONV_LIB)
