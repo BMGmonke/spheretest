@@ -445,11 +445,10 @@ iconv_download :
 		ln -s libiconv-${ICONV_VERSION} libiconv;                          \
 		cd ${ICONV_DIR};                                                   \
 		patch -p1 < ${ANDR_ROOT}/patches/libiconv_android.patch;           \
-		patch -p1 < ${ANDR_ROOT}/patches/libiconv_stdio.patch;           \
-		curl -fL --retry 3 --retry-all-errors --connect-timeout 30 \
-			https://git.savannah.gnu.org/cgit/config.git/plain/config.sub \
-			-o build-aux/config.sub || exit 1;                                  \
-		chmod +x build-aux/config.sub;                                         \
+		patch -p1 < ${ANDR_ROOT}/patches/libiconv_stdio.patch || exit 1;   \
+		test -s /usr/share/misc/config.sub || { echo "autotools-dev config.sub is missing"; exit 1; }; \
+		cp /usr/share/misc/config.sub build-aux/config.sub || exit 1;       \
+		chmod +x build-aux/config.sub || exit 1;                            \
 	fi
 
 iconv : $(ICONV_LIB)
