@@ -1,4 +1,4 @@
-name: Legacy Android APK (ARMv7)
+name: Legacy Android APK (ARM64)
 
 on:
   workflow_dispatch:
@@ -42,7 +42,7 @@ jobs:
         with:
           packages: 'platform-tools'
 
-      - name: Install Android SDK 23 and legacy NDK r11c
+      - name: Install Android SDK 23 and legacy NDK r11c (ARM64 target)
         shell: bash
         run: |
           yes | sdkmanager --licenses >/dev/null || true
@@ -99,8 +99,8 @@ jobs:
             exit 1
           fi
           mkdir -p artifacts
-          cp "$APK" artifacts/SphereTest-Android-ARMv7.apk
-          test -s artifacts/SphereTest-Android-ARMv7.apk
+          cp "$APK" artifacts/SphereTest-Android-ARM64.apk
+          test -s artifacts/SphereTest-Android-ARM64.apk
           unzip -t artifacts/SphereTest-Android-ARMv7.apk
           echo "Verified APK:"
           ls -lh artifacts/SphereTest-Android-ARMv7.apk
@@ -109,7 +109,7 @@ jobs:
         if: success()
         uses: actions/upload-artifact@v4
         with:
-          name: spheretest-android-armv7
+          name: spheretest-android-arm64
           path: artifacts/SphereTest-Android-ARMv7.apk
           if-no-files-found: error
           retention-days: 14
