@@ -237,6 +237,12 @@ public:
 		else
 			services->setVertexShaderConstant(worldViewProj.pointer(), 4, 4);
 
+		// Set model-view matrix for the OpenGL ES 2 compatibility shader inputs.
+		core::matrix4 worldView = driver->getTransform(video::ETS_VIEW);
+		worldView *= driver->getTransform(video::ETS_WORLD);
+		if (is_highlevel)
+			services->setVertexShaderConstant("mWorldView", worldView.pointer(), 16);
+
 		// set transposed world matrix
 		core::matrix4 transWorld = driver->getTransform(video::ETS_WORLD);
 		transWorld = transWorld.getTransposed();
@@ -626,7 +632,8 @@ ShaderInfo generate_shader(std::string name, u8 material_type, u8 drawtype,
 		return shaderinfo;
 
 	// Create shaders header
-	std::string shaders_header = "#version 120\n";
+	bool is_ogles2 = driver->getDriverType() == video::EDT_OGLES2;
+	std::string shaders_header = is_ogles2 ? "#version 100\nprecision mediump float;\n" : "#version 120\n";
 
 	static const char* drawTypes[] = {
 		"NDT_NORMAL",
@@ -775,16 +782,56 @@ ShaderInfo generate_shader(std::string name, u8 material_type, u8 drawtype,
 
 	shaders_header += "#define PLANET_RADIUS " + itos(g_settings->getU16("planet_radius")) + "\n";
 
+	// OpenGL ES 2 has no fixed-function GLSL built-ins. Map the Irrlicht
+	// vertex attributes and the legacy shader names used by SphereTest.
+	std::string vertex_header = shaders_header;
+	std::string pixel_header = shaders_header;
+	if (is_ogles2) {
+		vertex_header +=
+			"attribute vec3 inVertexPosition;\n"
+			"attribute vec3 inVertexNormal;\n"
+			"attribute vec4 inVertexColor;\n"
+			"attribute vec2 inTexCoord0;\n"
+			"attribute vec3 inVertexTangent;\n"
+			"attribute vec3 inVertexBinormal;\n"
+			"uniform mat4 mWorldView;\n"
+			"varying vec4 vColor;\n"
+			"varying vec4 vTexCoord[1];\n"
+			"#define gl_Vertex vec4(inVertexPosition, 1.0)\n"
+			"#define gl_Normal inVertexNormal\n"
+			"#define gl_Color inVertexColor\n"
+			"#define gl_MultiTexCoord0 vec4(inTexCoord0, 0.0, 1.0)\n"
+			"#define gl_MultiTexCoord1 vec4(inVertexTangent, 1.0)\n"
+			"#define gl_MultiTexCoord2 vec4(inVertexBinormal, 1.0)\n"
+			"#define gl_ModelViewMatrix mWorldView\n"
+			"#define gl_NormalMatrix mat3(mWorldView)\n"
+			"#define gl_TexCoord vTexCoord\n"
+			"#define gl_FrontColor vColor\n"
+			"#define gl_BackColor vColor\n";
+		pixel_header +=
+			"varying vec4 vColor;\n"
+			"varying vec4 vTexCoord[1];\n"
+			"#define gl_Color vColor\n"
+			"#define gl_TexCoord vTexCoord\n";
+	}
+
 	// Call addHighLevelShaderMaterial() or addShaderMaterial()
 	const c8* vertex_program_ptr = 0;
 	const c8* pixel_program_ptr = 0;
 	const c8* geometry_program_ptr = 0;
 	if (!vertex_program.empty()) {
-		vertex_program = shaders_header + vertex_program;
+		if (is_ogles2) {
+			const std::string main_signature = "void main(void)\n{";
+			const size_t main_pos = vertex_program.find(main_signature);
+			if (main_pos != std::string::npos)
+				vertex_program.replace(main_pos, main_signature.size(),
+						main_signature + "\n\tvColor = inVertexColor;");
+		}
+		vertex_program = vertex_header + vertex_program;
 		vertex_program_ptr = vertex_program.c_str();
 	}
 	if (!pixel_program.empty()) {
-		pixel_program = shaders_header + pixel_program;
+		pixel_program = pixel_header + pixel_program;
 		pixel_program_ptr = pixel_program.c_str();
 	}
 	if (!geometry_program.empty()) {
@@ -871,11 +918,15 @@ void load_shaders(std::string name, SourceShaderCache *sourcecache,
 			pixel_program = vertex_program;
 			geometry_program = vertex_program;
 		}
-		else if(drivertype == video::EDT_OPENGL){
-			// OpenGL: GLSL
+		else if(drivertype == video::EDT_OPENGL ||
+				drivertype == video::EDT_OGLES2){
+			// Desktop OpenGL and OpenGL ES 2 share SphereTest's GLSL source;
+			// generate_shader() supplies the appropriate GLSL version and
+			// fixed-function compatibility declarations for ES 2.
 			vertex_program = sourcecache->getOrLoad(name, "opengl_vertex.glsl");
 			pixel_program = sourcecache->getOrLoad(name, "opengl_fragment.glsl");
-			geometry_program = sourcecache->getOrLoad(name, "opengl_geometry.glsl");
+			if (drivertype == video::EDT_OPENGL)
+				geometry_program = sourcecache->getOrLoad(name, "opengl_geometry.glsl");
 		}
 		if(vertex_program != "" || pixel_program != "" || geometry_program != ""){
 			is_highlevel = true;
