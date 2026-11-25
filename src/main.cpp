@@ -682,11 +682,24 @@ static bool auto_select_world(GameParams *game_params)
 		return false;
 	// If there are no worlds, automatically create a new one
 	} else {
-		// This is the ultimate default world path
-		world_path = porting::path_user + DIR_DELIM + "worlds" +
-				DIR_DELIM + "world";
+		// This is the ultimate default world path. Create both directory
+		// levels now: older Android builds did not create the worlds folder
+		// before handing the path to the client/server.
+		std::string worlds_path = porting::path_user + DIR_DELIM + "worlds";
+		world_path = worlds_path + DIR_DELIM + "world";
 		infostream << "Creating default world at ["
 		           << world_path << "]" << std::endl;
+
+		if (!fs::PathExists(worlds_path) && !fs::CreateDir(worlds_path)) {
+			errorstream << "Failed to create worlds directory ["
+			            << worlds_path << "]" << std::endl;
+			return false;
+		}
+		if (!fs::PathExists(world_path) && !fs::CreateDir(world_path)) {
+			errorstream << "Failed to create default world directory ["
+			            << world_path << "]" << std::endl;
+			return false;
+		}
 	}
 
 	assert(world_path != "");	// Post-condition
