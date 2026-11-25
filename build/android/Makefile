@@ -79,7 +79,7 @@ OPENAL_URL_GIT = https://github.com/apportable/openal-soft
 
 OGG_DIR = $(ANDR_ROOT)/deps/libvorbis-libogg-android/
 OGG_LIB = $(OGG_DIR)libs/$(TARGET_ABI)/libogg.so
-VORBIS_LIB = $(OGG_DIR)libs/$(TARGET_ABI)/libogg.so
+VORBIS_LIB = $(OGG_DIR)libs/$(TARGET_ABI)/libvorbis.so
 OGG_TIMESTAMP = $(OGG_DIR)timestamp
 OGG_TIMESTAMP_INT = $(ANDR_ROOT)/deps/ogg_timestamp
 OGG_URL_GIT = https://github.com/vincentjames501/libvorbis-libogg-android
@@ -250,6 +250,9 @@ ogg_download :
 	fi
 
 ogg : $(OGG_LIB)
+
+$(VORBIS_LIB): $(OGG_LIB)
+	@test -s $@ || { echo "libvorbis build did not produce $@"; exit 1; }
 
 $(OGG_LIB): $(OGG_TIMESTAMP)
 	+ @REFRESH=0;                                                                \
@@ -758,7 +761,7 @@ clean_assets :
 	@$(RM) -r assets
 
 apk: local.properties assets $(ICONV_LIB) $(IRRLICHT_LIB) $(CURL_LIB) $(GMP_LIB) $(LEVELDB_TARGET)       \
-	$(OPENAL_LIB) $(OGG_LIB) prep_srcdir $(ANDR_ROOT)/jni/src/android_version.h    \
+	$(OPENAL_LIB) $(OGG_LIB) $(VORBIS_LIB) prep_srcdir $(ANDR_ROOT)/jni/src/android_version.h    \
 	$(ANDR_ROOT)/jni/src/android_version_githash.h sqlite3_download
 	+ @${ANDROID_NDK}/ndk-build NDK_MODULE_PATH=${NDK_MODULE_PATH}             \
 		GPROF=${GPROF} APP_ABI=${TARGET_ABI} HAVE_LEVELDB=${HAVE_LEVELDB}      \
